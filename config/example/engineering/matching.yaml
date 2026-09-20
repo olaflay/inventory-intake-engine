@@ -1,0 +1,21 @@
+# Deterministic Matching & Scoring Configuration
+version: "1.0"
+
+fuzzy:
+  min_length: 8
+  max_distance: 0.9
+  short_numeric_exact_only: true
+
+penalties:
+  confusion_pair_cost: 0.3
+  standard_edit_cost: 1.0
+
+serial:
+  ignorable_chars: [" ", "-", "/", "_", "."]
+  separators: ["/", ",", ";", "+"]
+  part_min_length: 3
+
+thresholds:
+  candidate_min_score: 0.70
+  max_candidates: 5
+  description_similarity_min: 0.60

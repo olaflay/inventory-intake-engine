@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "schema_version": "1.0.0",
+    "org_name": "Apex Drilling Equipment",
+    "timezone": "UTC",
+    "date_locale": "en-US",
+    "language": "en"
+  },
+  "actors": [
+    { "actorRef": "telegram:ops_lead", "displayName": "Alice Lead", "role": "operations_lead", "active": true }
+  ],
+  "roles": [
+    { "role": "operations_lead", "permission": "approve_tier_3" }
+  ],
+  "tiers": [
+    { "tier: 1": 1, "tier": 1, "label": "Auto", "approverRoles": ["operations_lead"], "approvalsRequired": 1, "minAssurance": "low", "allowSelfApproval": true, "expiryHours": 24 },
+    { "tier: 2": 2, "tier": 2, "label": "Peer", "approverRoles": ["operations_lead"], "approvalsRequired": 1, "minAssurance": "medium", "allowSelfApproval": false, "expiryHours": 48 },
+    { "tier: 3": 3, "tier": 3, "label": "Lead", "approverRoles": ["operations_lead"], "approvalsRequired": 1, "minAssurance": "high", "allowSelfApproval": false, "expiryHours": 72 }
+  ],
+  "approvalRules": [
+    { "priority": 1, "name": "default", "when": "always", "tier": 1 }
+  ],
+  "limits": {
+    "max_files_per_submission": 10,
+    "draft_quiet_seconds": 30,
+    "proposal_expiry_hours": 48
+  },
+  "statuses": [
+    { "code": "AVAILABLE", "label": "Available", "terminal": false, "blocksMove": false, "aliases": [] }
+  ],
+  "categories": [
+    { "code": "DRILL_BIT", "label": "Bit", "interchangeable": false, "exportSheet": "Bits" }
+  ],
+  "locationTypes": [
+    { "code": "YARD", "label": "Yard", "canBeDestination": true, "exportColumnKey": "yard" }
+  ]
+}

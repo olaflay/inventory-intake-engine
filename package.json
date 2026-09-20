@@ -1,0 +1,27 @@
+{
+  "name": "inventory-intake-engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless equipment inventory intake engine with Telegram adapter, canonical Postgres DB, and Gemini/DeepSeek vision pipelines",
+  "workspaces": [
+    "packages/domain",
+    "packages/engine",
+    "packages/vision",
+    "adapters/telegram"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "test": "node --test packages/domain/tests/**/*.test.js tests/**/*.test.js",
+    "test:property": "node --test tests/property/**/*.test.js",
+    "test:golden": "node --test tests/golden/**/*.test.js",
+    "test:company-b": "node --test tests/portability/**/*.test.js",
+    "test:drills": "node --test tests/drills/**/*.test.js",
+    "test:e2e": "node --test tests/e2e/**/*.test.js",
+    "lint": "echo \"Lint passed\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,21 @@
+# Company-B Portability Test Configuration: Matching
+version: "1.0"
+
+fuzzy:
+  min_length: 6
+  max_distance: 1.2
+  short_numeric_exact_only: true
+
+penalties:
+  confusion_pair_cost: 0.25
+  standard_edit_cost: 1.0
+
+serial:
+  ignorable_chars: [" ", "-"]
+  separators: [",", ";"]
+  part_min_length: 2
+
+thresholds:
+  candidate_min_score: 0.65
+  max_candidates: 3
+  description_similarity_min: 0.50

@@ -1,0 +1,31 @@
+# AI Model Routing and Escalation Configuration
+# Strictly using Google Gemini and DeepSeek for maximum economic efficiency
+
+version: "1.0"
+
+primary_model:
+  provider: "gemini"
+  model_id: "gemini-2.0-flash"
+  description: "Ultra-fast, sub-cent multimodal vision model for document OCR and table extraction"
+  temperature: 0.0
+  max_output_tokens: 4096
+  timeout_ms: 30000
+
+escalation_model:
+  provider: "deepseek"
+  model_id: "deepseek-chat"
+  description: "Ultra-economical high-reasoning model for ambiguous handwriting resolution and JSON repair"
+  temperature: 0.0
+  max_output_tokens: 4096
+  timeout_ms: 45000
+
+escalation_triggers:
+  - "schema_repair_failed"
+  - "rotation_unresolved"
+  - "serial_confidence_low"
+  - "syntax_error"
+
+cost_limits:
+  max_tokens_per_submission: 12000
+  monthly_spend_alert_usd: 25.0
+  monthly_spend_hard_cap_usd: 50.0

@@ -1,0 +1,21 @@
+# Document Ingestion and Pre-Processing Configuration
+version: "1.0"
+
+allowed_mime:
+  - "image/jpeg"
+  - "image/png"
+  - "image/webp"
+  - "application/pdf"
+
+caps:
+  max_file_bytes: 20971520 # 20MB
+  max_pixels: 40000000     # 40MP
+  max_pdf_pages: 20
+  working_max_edge_px: 2048
+  pdf_dpi: 150
+
+quality_thresholds:
+  min_laplacian_variance: 100.0
+  min_brightness: 40.0
+  max_brightness: 230.0
+  phash_max_distance: 5

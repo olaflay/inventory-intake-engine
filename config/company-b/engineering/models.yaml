@@ -1,0 +1,25 @@
+# Company-B Portability Test Configuration: Models
+version: "1.0"
+
+primary_model:
+  provider: "gemini"
+  model_id: "gemini-1.5-flash"
+  temperature: 0.0
+  max_output_tokens: 2048
+  timeout_ms: 25000
+
+escalation_model:
+  provider: "deepseek"
+  model_id: "deepseek-reasoner"
+  temperature: 0.0
+  max_output_tokens: 4096
+  timeout_ms: 60000
+
+escalation_triggers:
+  - "schema_repair_failed"
+  - "syntax_error"
+
+cost_limits:
+  max_tokens_per_submission: 15000
+  monthly_spend_alert_usd: 50.0
+  monthly_spend_hard_cap_usd: 100.0
