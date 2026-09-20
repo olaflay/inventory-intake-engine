@@ -8,3 +8,4 @@ export * from "./cli/index.js";
 export * from "./services/locationService.js";
 export * from "./services/assetRegistry.js";
 export * from "./excel/reconciler.js";
+export * from "./services/submissionAggregator.js";

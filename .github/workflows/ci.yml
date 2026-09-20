@@ -45,6 +45,7 @@ jobs:
           node --test tests/config/ops_workbook.test.js
           node --test tests/cli/cli.test.js
           node --test tests/engine/phase2_inventory_import.test.js
+          node --test tests/vision/phase3_ingestion.test.js
 
       - name: Chaos & Restore Drills
         run: |
