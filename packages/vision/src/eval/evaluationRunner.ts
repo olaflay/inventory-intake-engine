@@ -59,7 +59,14 @@ export function evaluateExtractions(
 
     // Lines & serial evaluation
     const extractedSerials = new Set(
-      extraction.lines.flatMap((l: ExtractedLine) => l.serials.map(s => s.trim().toUpperCase()))
+      extraction.lines.flatMap((l: ExtractedLine) => {
+        const serials = Array.isArray(l.serials) ? l.serials : [];
+        return serials.map((s: any) => {
+          if (typeof s === "string") return s.trim().toUpperCase();
+          if (s && typeof s.value === "string") return s.value.trim().toUpperCase();
+          return "";
+        }).filter(Boolean);
+      })
     );
 
     for (const expLine of groundTruth.expectedLines) {

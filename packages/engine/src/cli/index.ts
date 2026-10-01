@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { OpsWorkbookLoader, OpsWorkbookSheets } from "../config/opsWorkbookLoader.js";
-import { ExcelFormExporter, SheetExportData } from "../excel/exporter.js";
+import type { ExportTemplateSheetConfig } from "../config/engineeringConfigLoader.js";
+import { ExcelFormExporter, type ExportConfig, type SheetExportData } from "../excel/exporter.js";
 
 export interface CliResult {
   code: number;
@@ -161,24 +162,63 @@ export async function runCli(args: string[], env: Record<string, string> = proce
       }
 
       case "export": {
-        let orgName = "Company";
         const orgIdx = args.indexOf("--org");
-        if (orgIdx !== -1 && args[orgIdx + 1]) {
-          orgName = args[orgIdx + 1];
+        if (orgIdx === -1 || !args[orgIdx + 1]) {
+          return { code: 1, stdout: "", stderr: "Error: --org <name> is required (org name comes from cfg:meta.org_name, never a default)" };
+        }
+        const orgName = args[orgIdx + 1];
+
+        // cfg:export_template is mandatory: the exporter has no built-in
+        // profile, so a missing --config is a hard failure (LD-5).
+        const configIdx = args.indexOf("--config");
+        if (configIdx === -1 || !args[configIdx + 1]) {
+          return {
+            code: 1,
+            stdout: "",
+            stderr: "Error: --config <export_template.json> is required (the exporter has no default template profile)"
+          };
+        }
+        const configPath = resolve(process.cwd(), args[configIdx + 1]);
+        const rawConfig = await readFile(configPath, "utf-8");
+        let exportConfig: ExportConfig;
+        try {
+          exportConfig = JSON.parse(rawConfig) as ExportConfig;
+        } catch {
+          return { code: 1, stdout: "", stderr: `Error: Export config at ${configPath} is not valid JSON` };
+        }
+
+        // Without --data the export projects zero items per declared sheet.
+        const dataIdx = args.indexOf("--data");
+        let sheets: SheetExportData[] = [];
+        if (dataIdx !== -1 && args[dataIdx + 1]) {
+          const dataPath = resolve(process.cwd(), args[dataIdx + 1]);
+          const rawData = await readFile(dataPath, "utf-8");
+          try {
+            sheets = JSON.parse(rawData) as SheetExportData[];
+          } catch {
+            return { code: 1, stdout: "", stderr: `Error: Export data at ${dataPath} is not valid JSON` };
+          }
+        } else {
+          sheets = exportConfig.sheets.map((sheet: ExportTemplateSheetConfig) => ({
+            categoryCode: sheet.category_code,
+            sheetName: sheet.sheet_name,
+            rows: []
+          }));
         }
 
         const exporter = new ExcelFormExporter();
-        const dummySheets: SheetExportData[] = [
-          { categoryCode: "MONITORS", sheetName: "Monitors", rows: [] }
-        ];
-        const projection = exporter.generateProjection(orgName, dummySheets);
-
-        return {
-          code: 0,
-          stdout: `Generated dated projection: ${projection.filename} (Self-check: ${projection.selfCheckPassed ? "PASSED" : "FAILED"})`,
-          stderr: "",
-          data: projection
-        };
+        try {
+          const projection = exporter.generateProjection(orgName, sheets, new Date(), exportConfig);
+          return {
+            code: 0,
+            stdout: `Generated dated projection: ${projection.filename} (Self-check: ${projection.selfCheckPassed ? "PASSED" : "FAILED"}, items: ${projection.totalItems}, bytes: ${projection.bytes.length})`,
+            stderr: "",
+            data: projection
+          };
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return { code: 1, stdout: "", stderr: msg, data: undefined };
+        }
       }
 
       default:

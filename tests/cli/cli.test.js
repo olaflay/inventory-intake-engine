@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { resolve } from "node:path";
-import { runCli } from "../../packages/engine/dist/index.js";
+import { resolve, join } from "node:path";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { runCli, readXlsx } from "../../packages/engine/dist/index.js";
 
 test("CLI: Displays help on --help flag", async () => {
   const res = await runCli(["--help"]);
@@ -53,8 +55,72 @@ test("CLI approve: Records approval for proposal with specified actor", async ()
 });
 
 test("CLI export: Generates dated projection summary (LD-3)", async () => {
-  const res = await runCli(["export", "--org", "ApexEnergy"]);
+  const res = await runCli([
+    "export",
+    "--org",
+    "ApexEnergy",
+    "--config",
+    "tests/fixtures/export_template.json"
+  ]);
   assert.equal(res.code, 0);
   assert.ok(res.data.filename.startsWith("ApexEnergy_INVENTORY_"));
   assert.equal(res.data.selfCheckPassed, true);
+});
+
+// LD-5: the exporter has no built-in template profile, so a missing
+// --config must fail loudly instead of guessing a layout.
+test("CLI export: refuses to run without --config (LD-5)", async () => {
+  const res = await runCli(["export", "--org", "ApexEnergy"]);
+  assert.equal(res.code, 1);
+  assert.match(res.stderr, /--config <export_template\.json> is required/);
+});
+
+test("CLI export: projects supplied rows through the configured profile", async () => {
+  const dataDir = mkdtempSync(join(tmpdir(), "cli-export-"));
+  const dataPath = join(dataDir, "data.json");
+  writeFileSync(
+    dataPath,
+    JSON.stringify([
+      {
+        categoryCode: "SURVEY",
+        sheetName: "SURVEY EQUIPMENT",
+        rows: [
+          {
+            internalRef: "AE/SE/001",
+            description: "Meridian Gyro",
+            categoryCode: "SURVEY",
+            statusCode: "OPERATIONAL",
+            locationType: "vessel",
+            locationName: "Warami 10",
+            serialNumbers: ["8709"]
+          }
+        ]
+      }
+    ]),
+    "utf-8"
+  );
+
+  const res = await runCli([
+    "export",
+    "--org",
+    "ApexEnergy",
+    "--config",
+    "tests/fixtures/export_template.json",
+    "--data",
+    dataPath
+  ]);
+
+  try {
+    assert.equal(res.code, 0);
+    assert.equal(res.data.totalItems, 1);
+    assert.equal(res.data.sheetCount, 2);
+    assert.equal(res.data.selfCheckPassed, true);
+    // The configured mark/remark columns were filled from the location rule.
+    const survey = readXlsx(res.data.bytes).sheets.find(s => s.name === "SURVEY EQUIPMENT");
+    assert.equal(survey.cells.get("A2"), "AE/SE/001");
+    assert.equal(survey.cells.get("E2"), "1");
+    assert.equal(survey.cells.get("F2"), "Warami 10");
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
 });

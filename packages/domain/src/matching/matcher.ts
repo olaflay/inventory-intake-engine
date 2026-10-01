@@ -35,18 +35,67 @@ export function matchLine(
   allAssets: AssetRecord[],
   config: MatchingConfig,
   destinationLocationId?: string,
-  distinguishingTokens: string[][] = [["HP", "DELL", "LG"]]
+  distinguishingTokens?: string[][]
 ): MatchResult {
   const flags: string[] = [];
+  const activeDistinguishingTokens = distinguishingTokens ?? config.distinguishingTokens ?? [];
   const normExtracted = normalizeSerial(extractedSerial, config.ignorableChars);
 
-  if (!normExtracted) {
+  const configuredNullTokens = new Set(
+    (config.nullSerialTokens || []).map(t =>
+      t.toUpperCase().replace(/[^A-Z0-9]/g, "")
+    )
+  );
+  const cleanToken = normExtracted.replace(/[^A-Z0-9]/g, "");
+  if (
+    !normExtracted ||
+    (cleanToken.length > 0 && configuredNullTokens.has(cleanToken)) ||
+    (config.nullSerialTokens && config.nullSerialTokens.includes(normExtracted))
+  ) {
     return {
       state: "unknown",
       assetId: null,
       candidates: [],
       flags: ["no_serial"]
     };
+  }
+
+  // Check composite serial parts (FR-MAT-03, EC-38)
+  const compositeParts = extractSerialParts(extractedSerial, config.separators, config.partMinLength);
+  if (compositeParts.length > 1) {
+    const matchedAssetIds = new Set<string>();
+    const partCandidates: SerialMatchCandidate[] = [];
+
+    for (const part of compositeParts) {
+      for (const a of allAssets) {
+        for (const s of a.serials) {
+          if (normalizeSerial(s, config.ignorableChars) === part) {
+            matchedAssetIds.add(a.id);
+            partCandidates.push({
+              assetId: a.id,
+              internalRef: a.internalRef,
+              serialRaw: s,
+              serialNorm: part,
+              score: 1.0,
+              distance: 0.0,
+              description: a.description,
+              locationId: a.locationId,
+              statusCode: a.statusCode,
+              flags: ["composite_part_match"]
+            });
+          }
+        }
+      }
+    }
+
+    if (matchedAssetIds.size > 1) {
+      return {
+        state: "ambiguous",
+        assetId: null,
+        candidates: partCandidates,
+        flags: [...flags, "composite_parts_conflict"]
+      };
+    }
   }
 
   // 1. Check exact match
@@ -62,7 +111,7 @@ export function matchLine(
   if (exactMatches.length === 1) {
     const matched = exactMatches[0].asset;
 
-    if (checkDescriptionConflict(extractedDesc, matched.description, distinguishingTokens)) {
+    if (checkDescriptionConflict(extractedDesc, matched.description, activeDistinguishingTokens)) {
       flags.push("description_conflict");
     }
 
@@ -120,9 +169,8 @@ export function matchLine(
     };
   }
 
-  // 2. Check composite serial parts
-  const parts = extractSerialParts(extractedSerial, config.separators, config.partMinLength);
-  if (parts.length > 1) {
+  // 2. Check composite serial parts flag
+  if (compositeParts.length > 1) {
     flags.push("composite_serial");
   }
 
@@ -154,7 +202,7 @@ export function matchLine(
         const score = 1.0 - (dist / Math.max(normExtracted.length, normS.length));
         const candFlags = ["fuzzy_matched"];
 
-        if (checkDescriptionConflict(extractedDesc, a.description, distinguishingTokens)) {
+        if (checkDescriptionConflict(extractedDesc, a.description, activeDistinguishingTokens)) {
           candFlags.push("description_conflict");
           if (!flags.includes("description_conflict")) {
             flags.push("description_conflict");

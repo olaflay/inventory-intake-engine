@@ -31,7 +31,9 @@ test("Golden Test (Appendix D): 17-line dispatch with sample inventory produces 
     candidateMinScore: 0.7,
     maxCandidates: 5,
     descriptionSimilarityMin: 0.6,
-    confusionPairs: [{ a: "O", b: "0", cost: 0.3 }]
+    confusionPairs: [{ a: "O", b: "0", cost: 0.3 }],
+    distinguishingTokens: [["HP", "DELL", "LG"]],
+    nullSerialTokens: ["NA", "N/A", "NIL", "NONE", "NSN"]
   };
 
   const destinationLocationId = "loc-warami-10";

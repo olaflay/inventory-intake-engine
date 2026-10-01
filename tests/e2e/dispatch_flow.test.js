@@ -167,7 +167,9 @@ test("E2E Journey J1: Complete Dispatch Flow with Waybill and Manifest (Appendix
     candidateMinScore: 0.7,
     maxCandidates: 5,
     descriptionSimilarityMin: 0.6,
-    confusionPairs: [{ a: "O", b: "0", cost: 0.3 }]
+    confusionPairs: [{ a: "O", b: "0", cost: 0.3 }],
+    distinguishingTokens: [["HP", "DELL", "LG"]],
+    nullSerialTokens: ["NA", "N/A", "NIL", "NONE", "NSN"]
   };
 
   const destinationLocationId = "loc-warami-10";
@@ -307,6 +309,59 @@ test("E2E Journey J1: Complete Dispatch Flow with Waybill and Manifest (Appendix
   // Step 9: Dated Excel Form Projection Generation (LD-3, PRD §20.3)
   // =========================================================================
   const exporter = new ExcelFormExporter();
+  // cfg:export_template for this journey. The exporter carries no default
+  // profile, so every sheet/column/mark/remark comes from config (LD-5).
+  const e2eExportConfig = {
+    version: "1.0",
+    filename_pattern: "{org}_INVENTORY_{date}.xlsx",
+    serial_separator: ", ",
+    sheets: [
+      {
+        sheet_name: "SURVEY EQUIPMENT",
+        category_code: "SURVEY",
+        first_data_row: 2,
+        totals_column: "B",
+        totals_label_column: "H",
+        totals_label: "Total",
+        columns: [
+          { key: "internal_ref", column: "A" },
+          { key: "description", column: "C" },
+          { key: "location_mark", column: "D" },
+          { key: "location_remark", column: "E" }
+        ]
+      },
+      {
+        sheet_name: "IT EQUIPMENT",
+        category_code: "IT",
+        first_data_row: 2,
+        totals_column: "B",
+        totals_label_column: "H",
+        totals_label: "Total",
+        columns: [
+          { key: "internal_ref", column: "A" },
+          { key: "description", column: "C" },
+          { key: "location_mark", column: "D" },
+          { key: "location_remark", column: "E" }
+        ]
+      }
+    ],
+    summary: {
+      sheet_name: "SUMMARY",
+      first_data_row: 2,
+      label_column: "A",
+      total_column: "B",
+      totals_label: "Grand Total"
+    },
+    location_export_rules: [
+      {
+        location_type: "vessel",
+        mark_column: "D",
+        remark_column: "E",
+        mark_value: "1",
+        remark_template: "{location}"
+      }
+    ]
+  };
   const exportSheets = [
     {
       categoryCode: "SURVEY",
@@ -325,7 +380,7 @@ test("E2E Journey J1: Complete Dispatch Flow with Waybill and Manifest (Appendix
     }
   ];
 
-  const exportResult = exporter.generateProjection("GOSL", exportSheets);
+  const exportResult = exporter.generateProjection("GOSL", exportSheets, new Date(), e2eExportConfig);
   assert.equal(exportResult.selfCheckPassed, true);
   assert.equal(exportResult.totalItems, 3);
   assert.match(exportResult.filename, /^GOSL_INVENTORY_\d{4}_\d{2}_\d{2}\.xlsx$/);

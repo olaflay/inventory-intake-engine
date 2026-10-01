@@ -41,6 +41,57 @@ test("Engine API Server: health checks and authentication gating", async () => {
 
 test("ExcelFormExporter: generates projection with verified totals and self-checks", () => {
   const exporter = new ExcelFormExporter();
+  const config = {
+    version: "1.0",
+    filename_pattern: "{org}_INVENTORY_{date}.xlsx",
+    serial_separator: ", ",
+    sheets: [
+      {
+        sheet_name: "SURVEY EQUIPMENT",
+        category_code: "SURVEY",
+        first_data_row: 2,
+        totals_column: "B",
+        totals_label_column: "H",
+        totals_label: "Total",
+        columns: [
+          { key: "internal_ref", column: "A" },
+          { key: "description", column: "C" },
+          { key: "location_mark", column: "D" },
+          { key: "location_remark", column: "E" }
+        ]
+      },
+      {
+        sheet_name: "IT EQUIPMENT",
+        category_code: "IT",
+        first_data_row: 2,
+        totals_column: "B",
+        totals_label_column: "H",
+        totals_label: "Total",
+        columns: [
+          { key: "internal_ref", column: "A" },
+          { key: "description", column: "C" },
+          { key: "location_mark", column: "D" },
+          { key: "location_remark", column: "E" }
+        ]
+      }
+    ],
+    summary: {
+      sheet_name: "SUMMARY",
+      first_data_row: 2,
+      label_column: "A",
+      total_column: "B",
+      totals_label: "Grand Total"
+    },
+    location_export_rules: [
+      {
+        location_type: "vessel",
+        mark_column: "D",
+        remark_column: "E",
+        mark_value: "1",
+        remark_template: "{location}"
+      }
+    ]
+  };
   const sheets = [
     {
       categoryCode: "SURVEY",
@@ -51,6 +102,7 @@ test("ExcelFormExporter: generates projection with verified totals and self-chec
           description: "Meridian Gyro",
           categoryCode: "SURVEY",
           statusCode: "OPERATIONAL",
+          locationType: "vessel",
           locationName: "Warami 10",
           serialNumbers: ["8709"]
         }
@@ -65,6 +117,7 @@ test("ExcelFormExporter: generates projection with verified totals and self-chec
           description: "HP CPU",
           categoryCode: "IT",
           statusCode: "OPERATIONAL",
+          locationType: "vessel",
           locationName: "Base Store",
           serialNumbers: ["6CR5420WK4"]
         }
@@ -72,7 +125,7 @@ test("ExcelFormExporter: generates projection with verified totals and self-chec
     }
   ];
 
-  const result = exporter.generateProjection("GOSL", sheets);
+  const result = exporter.generateProjection("GOSL", sheets, new Date(), config);
   assert.equal(result.sheetCount, 2);
   assert.equal(result.totalItems, 2);
   assert.equal(result.selfCheckPassed, true);

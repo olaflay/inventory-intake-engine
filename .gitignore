@@ -14,6 +14,10 @@ dist/
 *.log
 npm-debug.log*
 
+# LibreOffice recalculation scratch output (see libreoffice_recalc.yml)
+tmp-export/
+tmp-recalc/
+
 # OS Files
 .DS_Store
 Thumbs.db

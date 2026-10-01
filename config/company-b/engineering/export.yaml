@@ -1,0 +1,57 @@
+# Company-B Export Template Profile (LD-5 zero domain literals)
+# Different sheet names, different column letters, different summary sheet,
+# different filename pattern, different location types. Zero code changes.
+version: "1.0"
+
+filename_pattern: "{org}_ASSET_REGISTER_{date}.xlsx"
+
+serial_separator: " | "
+
+sheets:
+  - sheet_name: "Rig Instruments"
+    category_code: "RIG_INSTRUMENT"
+    first_data_row: 4
+    totals_column: "D"
+    totals_label_column: "A"
+    totals_label: "Register Total"
+    columns:
+      - { key: "internal_ref", column: "B" }
+      - { key: "description", column: "C" }
+      - { key: "serials", column: "F" }
+      - { key: "status", column: "G" }
+      - { key: "location_mark", column: "H" }
+      - { key: "location_remark", column: "I" }
+
+  - sheet_name: "Workshop Stock"
+    category_code: "WORKSHOP_PART"
+    first_data_row: 4
+    totals_column: "D"
+    totals_label_column: "A"
+    totals_label: "Register Total"
+    columns:
+      - { key: "internal_ref", column: "B" }
+      - { key: "description", column: "C" }
+      - { key: "serials", column: "F" }
+      - { key: "status", column: "G" }
+      - { key: "location_mark", column: "H" }
+      - { key: "location_remark", column: "I" }
+
+summary:
+  sheet_name: "Register Summary"
+  first_data_row: 3
+  label_column: "B"
+  total_column: "D"
+  totals_label: "All Items"
+
+location_export_rules:
+  - location_type: "rig_alpha"
+    mark_column: "H"
+    remark_column: "I"
+    mark_value: "X"
+    remark_template: "at {location}"
+
+  - location_name: "Depot Two"
+    mark_column: "H"
+    remark_column: "I"
+    mark_value: "X"
+    remark_template: "stored {location}"

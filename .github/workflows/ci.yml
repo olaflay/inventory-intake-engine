@@ -23,6 +23,9 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Build Packages
+        run: npm run build --workspaces
+
       - name: Strict Typecheck
         run: |
           npx tsc --project packages/domain/tsconfig.json
@@ -30,32 +33,16 @@ jobs:
           npx tsc --project packages/engine/tsconfig.json
           npx tsc --project adapters/telegram/tsconfig.json
 
-      - name: Domain Unit & Property Tests
-        run: |
-          node --test packages/domain/tests/domain.test.js
-          node --test tests/property/concurrency.test.js
-
-      - name: Golden Replay & Integration Tests
-        run: |
-          node --test tests/golden/sample_dispatch.test.js
-          node --test tests/engine/api.test.js
-          node --test tests/engine/importer_outbox.test.js
-          node --test tests/vision/eval_harness.test.js
-          node --test tests/adapter/telegram.test.js
-          node --test tests/config/ops_workbook.test.js
-          node --test tests/cli/cli.test.js
-          node --test tests/engine/phase2_inventory_import.test.js
-          node --test tests/vision/phase3_ingestion.test.js
+      # Full suite from package.json so a new test file can never be silently
+      # skipped by an incomplete list here.
+      - name: Full Test Suite
+        run: npm test
 
       - name: Chaos & Restore Drills
         run: |
           node --test tests/drills/crash_midpost_drill.test.js
           node --test tests/drills/provider_outage_breaker_drill.test.js
           node --test tests/drills/restore_integrity_drill.test.js
-
-      - name: End-to-End Dispatch Journey (J1)
-        run: |
-          node --test tests/e2e/dispatch_flow.test.js
 
       - name: Company-B Portability Audit (LD-5 Zero Literals)
         run: |

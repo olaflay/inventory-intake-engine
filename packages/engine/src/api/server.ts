@@ -1,17 +1,29 @@
 import http, { IncomingMessage, ServerResponse } from "node:http";
+import { ExcelFormExporter, type ExportConfig, type SheetExportData } from "../excel/exporter.js";
 
 export interface EngineServerConfig {
   port: number;
   adapterKeyPepper: string;
+  /** Optional exporter wired to POST /v1/exports (FR-EXP-01). */
+  exporter?: ExcelFormExporter;
 }
 
 export class EngineApiServer {
   private server: http.Server;
   private port: number;
+  private exporter: ExcelFormExporter;
+  private exportConfig?: ExportConfig;
+  private exports = new Map<string, { filename: string; bytes: Buffer; selfCheckPassed: boolean; createdAt: string }>();
 
   constructor(config: EngineServerConfig) {
     this.port = config.port;
+    this.exporter = config.exporter ?? new ExcelFormExporter();
     this.server = http.createServer((req, res) => this.handleRequest(req, res));
+  }
+
+  /** Wire the validated cfg:export_template used by POST /v1/exports. */
+  public setExportConfig(config: ExportConfig): void {
+    this.exportConfig = config;
   }
 
   private sendJson(res: ServerResponse, statusCode: number, data: unknown): void {
@@ -56,6 +68,91 @@ export class EngineApiServer {
         }
       });
       return;
+    }
+
+    // Export endpoints (FR-EXP-01, PRD 20.3). Export failure never touches the ledger.
+    if (method === "POST" && url.pathname === "/v1/exports") {
+      let body = "";
+      req.on("data", chunk => { body += chunk; });
+      req.on("end", () => {
+        let parsed: { organizationName?: string; sheets?: SheetExportData[] };
+        try {
+          parsed = body ? JSON.parse(body) : { organizationName: "", sheets: [] };
+        } catch {
+          return this.sendJson(res, 400, { error: { code: "bad_request", message: "Invalid JSON" } });
+        }
+
+        if (!parsed.organizationName || !Array.isArray(parsed.sheets)) {
+          return this.sendJson(res, 400, {
+            error: { code: "bad_request", message: "'organizationName' and 'sheets' are required" }
+          });
+        }
+
+        if (!this.exportConfig) {
+          return this.sendJson(res, 503, {
+            error: {
+              code: "export_template_not_configured",
+              message: "cfg:export_template is not loaded; the exporter refuses to guess a template profile (LD-5)"
+            }
+          });
+        }
+
+        try {
+          const result = this.exporter.generateProjection(
+            parsed.organizationName,
+            parsed.sheets,
+            new Date(),
+            this.exportConfig
+          );
+          const exportId = `exp-${Date.now()}`;
+          this.exports.set(exportId, {
+            filename: result.filename,
+            bytes: result.bytes,
+            selfCheckPassed: result.selfCheckPassed,
+            createdAt: result.generatedAt
+          });
+          return this.sendJson(res, 201, {
+            id: exportId,
+            filename: result.filename,
+            sheetCount: result.sheetCount,
+            totalItems: result.totalItems,
+            selfCheckPassed: result.selfCheckPassed
+          });
+        } catch (err: unknown) {
+          const error = err as { code?: string; message?: string };
+          const status = error.code === "export_self_check_failed" ? 422 : 409;
+          return this.sendJson(res, status, {
+            error: { code: error.code ?? "export_failed", message: error.message ?? "Export failed" }
+          });
+        }
+      });
+      return;
+    }
+
+    if (method === "GET" && url.pathname.startsWith("/v1/exports/")) {
+      const exportId = url.pathname.split("/")[3];
+      if (url.pathname.endsWith("/file")) {
+        const record = this.exports.get(exportId);
+        if (!record) {
+          return this.sendJson(res, 404, { error: { code: "not_found", message: "Export not found" } });
+        }
+        res.writeHead(200, {
+          "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "Content-Disposition": `attachment; filename="${record.filename}"`
+        });
+        res.end(record.bytes);
+        return;
+      }
+      const record = this.exports.get(exportId);
+      if (!record) {
+        return this.sendJson(res, 404, { error: { code: "not_found", message: "Export not found" } });
+      }
+      return this.sendJson(res, 200, {
+        id: exportId,
+        filename: record.filename,
+        selfCheckPassed: record.selfCheckPassed,
+        createdAt: record.createdAt
+      });
     }
 
     if (method === "GET" && url.pathname.startsWith("/v1/proposals/")) {

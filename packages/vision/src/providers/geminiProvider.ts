@@ -1,18 +1,29 @@
-import type { ExtractionResult } from "../types.js";
+import type { ExtractionResult, IVisionProvider } from "../types.js";
 
 export interface GeminiConfig {
   apiKey?: string;
   modelId: string;
   temperature?: number;
+  endpointBase?: string;
 }
 
-export class GeminiVisionProvider {
+export class GeminiVisionProvider implements IVisionProvider {
+  public readonly providerId: string = "gemini";
   private apiKey: string;
-  private modelId: string;
+  public readonly modelId: string;
+  private endpointBase: string;
 
   constructor(config: GeminiConfig) {
+    if (!config || !config.modelId) {
+      throw new Error("GeminiVisionProvider requires modelId in configuration (LD-5: no defaults in code).");
+    }
+    const endpoint = config.endpointBase || process.env.GEMINI_ENDPOINT_BASE;
+    if (!endpoint) {
+      throw new Error("GeminiVisionProvider requires endpointBase in configuration (LD-5: no defaults in code).");
+    }
     this.apiKey = config.apiKey || process.env.GEMINI_API_KEY || "";
-    this.modelId = config.modelId || "gemini-2.0-flash";
+    this.modelId = config.modelId;
+    this.endpointBase = endpoint;
   }
 
   async extractDocument(
@@ -25,7 +36,7 @@ export class GeminiVisionProvider {
     }
 
     const base64Data = imageBuffer.toString("base64");
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.modelId}:generateContent?key=${this.apiKey}`;
+    const endpoint = `${this.endpointBase}/models/${this.modelId}:generateContent?key=${this.apiKey}`;
 
     const payload = {
       contents: [
@@ -70,7 +81,7 @@ export class GeminiVisionProvider {
       tokensIn: data?.usageMetadata?.promptTokenCount || 0,
       tokensOut: data?.usageMetadata?.candidatesTokenCount || 0,
       modelUsed: this.modelId,
-      costUsdEst: 0.002
+      costUsdEst: 0
     };
   }
 }

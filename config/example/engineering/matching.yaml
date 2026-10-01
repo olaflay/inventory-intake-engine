@@ -19,3 +19,17 @@ thresholds:
   candidate_min_score: 0.70
   max_candidates: 5
   description_similarity_min: 0.60
+
+distinguishing_tokens:
+  - ["HP", "DELL", "LG"]
+
+null_serial_tokens:
+  - "NA"
+  - "N/A"
+  - "NIL"
+  - "NONE"
+  - "NSN"
+  - "UNKNOWN"
+  - "NOTAPPLICABLE"
+  - "NULL"
+  - "-"

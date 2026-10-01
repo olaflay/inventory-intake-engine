@@ -1,14 +1,17 @@
 import type { ProposalVersionState } from "../types.js";
 
 const VALID_PROPOSAL_TRANSITIONS: Record<ProposalVersionState, ProposalVersionState[]> = {
+  DRAFT: ["READY", "PENDING_APPROVAL", "SUPERSEDED"],
   READY: ["PENDING_APPROVAL", "SUPERSEDED", "STALE", "EXPIRED"],
-  PENDING_APPROVAL: ["APPROVED", "REJECTED", "SUPERSEDED", "STALE", "EXPIRED"],
-  APPROVED: ["POSTED", "STALE", "FAILED" as any],
+  PENDING_APPROVAL: ["PARTIALLY_APPROVED", "APPROVED", "REJECTED", "AMENDED", "SUPERSEDED", "STALE", "EXPIRED"],
+  PARTIALLY_APPROVED: ["APPROVED", "REJECTED", "AMENDED", "SUPERSEDED", "STALE", "EXPIRED"],
+  APPROVED: ["POSTED", "STALE", "SUPERSEDED", "EXPIRED"],
   POSTED: [],
   REJECTED: [],
-  EXPIRED: [],
+  AMENDED: ["SUPERSEDED"],
+  EXPIRED: ["PENDING_APPROVAL", "SUPERSEDED"],
   SUPERSEDED: [],
-  STALE: ["READY"] // Re-validated creates new version or resets
+  STALE: ["READY", "PENDING_APPROVAL", "SUPERSEDED"]
 };
 
 export function transitionProposalVersion(

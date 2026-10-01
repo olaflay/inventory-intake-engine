@@ -1,0 +1,22 @@
+{
+  "organizationName": "GOSL",
+  "sheets": [
+    {
+      "categoryCode": "SURVEY",
+      "sheetName": "SURVEY EQUIPMENT",
+      "rows": [
+        { "internalRef": "GOSL/SE/001", "description": "Meridian Gyro", "categoryCode": "SURVEY", "statusCode": "OPERATIONAL", "locationType": "vessel", "locationName": "Warami 10", "serialNumbers": ["8709"] },
+        { "internalRef": "GOSL/SE/002", "description": "Tromshort Gyro", "categoryCode": "SURVEY", "statusCode": "OPERATIONAL", "locationType": "vessel", "locationName": "Warami 10", "serialNumbers": ["8710"] },
+        { "internalRef": "GOSL/SE/003", "description": "Anemometer", "categoryCode": "SURVEY", "statusCode": "OPERATIONAL", "locationType": "vessel", "locationName": "Warami 10", "serialNumbers": ["8711"] }
+      ]
+    },
+    {
+      "categoryCode": "IT",
+      "sheetName": "IT EQUIPMENT",
+      "rows": [
+        { "internalRef": "GOSL/SE/088", "description": "HP CPU", "categoryCode": "IT", "statusCode": "OPERATIONAL", "locationType": "vessel", "locationName": "Warami 10", "serialNumbers": ["6CR5420WK4"] },
+        { "internalRef": "GOSL/SE/089", "description": "HP Monitor", "categoryCode": "IT", "statusCode": "OPERATIONAL", "locationType": "vessel", "locationName": "Warami 10", "serialNumbers": ["6CR5420WK5"] }
+      ]
+    }
+  ]
+}

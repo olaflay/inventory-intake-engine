@@ -1,0 +1,51 @@
+name: LibreOffice Recalculation Check (FR-EXP-01, PRD 20.3 step 6)
+
+# PRD 20.3 step 6 requires a second calculation engine to confirm the totals.
+# The exporter writes cached values so the file looks right before any
+# calculation; this job makes LibreOffice recalculate the formulas and fails
+# the build if its numbers disagree with the exporter's claims.
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  recalc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Packages
+        run: npm run build --workspaces
+
+      - name: Install LibreOffice Calc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreoffice-calc
+
+      - name: Write the dated projection
+        run: node scripts/make_export_fixture.mjs
+
+      - name: Recalculate with headless LibreOffice
+        run: |
+          set -euo pipefail
+          soffice --headless --norestore \
+            --convert-to xlsx:"Calc MS Excel 2007 XML" \
+            --outdir tmp-recalc tmp-export/*.xlsx
+          ls -l tmp-recalc
+
+      - name: Assert the recalculated totals match the database counts
+        run: node scripts/verify_recalc.mjs tmp-recalc tmp-export/expected_totals.json

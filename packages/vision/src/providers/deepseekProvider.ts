@@ -1,16 +1,29 @@
+import type { IReasoningProvider } from "../types.js";
+
 export interface DeepSeekConfig {
   apiKey?: string;
-  modelId?: string;
+  modelId: string;
   temperature?: number;
+  endpoint?: string;
 }
 
-export class DeepSeekReasoningProvider {
+export class DeepSeekReasoningProvider implements IReasoningProvider {
+  public readonly providerId: string = "deepseek";
   private apiKey: string;
-  private modelId: string;
+  public readonly modelId: string;
+  private endpoint: string;
 
-  constructor(config: DeepSeekConfig = {}) {
+  constructor(config: DeepSeekConfig) {
+    if (!config || !config.modelId) {
+      throw new Error("DeepSeekReasoningProvider requires modelId in configuration (LD-5: no defaults in code).");
+    }
+    const endpoint = config.endpoint || process.env.DEEPSEEK_ENDPOINT;
+    if (!endpoint) {
+      throw new Error("DeepSeekReasoningProvider requires endpoint in configuration (LD-5: no defaults in code).");
+    }
     this.apiKey = config.apiKey || process.env.DEEPSEEK_API_KEY || "";
-    this.modelId = config.modelId || "deepseek-chat";
+    this.modelId = config.modelId;
+    this.endpoint = endpoint;
   }
 
   async repairJson(malformedJsonText: string, schemaDescription: string): Promise<Record<string, unknown>> {
@@ -18,7 +31,6 @@ export class DeepSeekReasoningProvider {
       throw new Error("DEEPSEEK_API_KEY is not configured.");
     }
 
-    const endpoint = "https://api.deepseek.com/chat/completions";
     const prompt = `You are a strict JSON repair engine. Correct the following invalid or truncated JSON to match this schema:
 Schema:
 ${schemaDescription}
@@ -28,7 +40,7 @@ ${malformedJsonText}
 
 Return ONLY valid JSON with no markdown backticks, no commentary.`;
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(this.endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

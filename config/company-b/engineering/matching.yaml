@@ -19,3 +19,11 @@ thresholds:
   candidate_min_score: 0.65
   max_candidates: 3
   description_similarity_min: 0.50
+
+distinguishing_tokens:
+  - ["RIG_A", "RIG_B"]
+
+null_serial_tokens:
+  - "KEINE"
+  - "N/A"
+  - "NULL"

@@ -4,6 +4,7 @@ version: "1.0"
 primary_model:
   provider: "gemini"
   model_id: "gemini-1.5-flash"
+  endpoint_base: "https://generativelanguage.googleapis.com/v1beta"
   temperature: 0.0
   max_output_tokens: 2048
   timeout_ms: 25000
@@ -11,6 +12,7 @@ primary_model:
 escalation_model:
   provider: "deepseek"
   model_id: "deepseek-reasoner"
+  endpoint: "https://api.deepseek.com/chat/completions"
   temperature: 0.0
   max_output_tokens: 4096
   timeout_ms: 60000
@@ -23,3 +25,10 @@ cost_limits:
   max_tokens_per_submission: 15000
   monthly_spend_alert_usd: 50.0
   monthly_spend_hard_cap_usd: 100.0
+  model_pricing:
+    "gemini-1.5-flash":
+      promptTokenUsd: 0.000000075
+      candidateTokenUsd: 0.00000030
+    "deepseek-reasoner":
+      promptTokenUsd: 0.00000055
+      candidateTokenUsd: 0.00000219

@@ -1,16 +1,6 @@
-import type { UUID } from "@inventory/domain";
+import type { OutboxEvent } from "../events/eventHub.js";
 
-export interface OutboxEvent {
-  seq: number;
-  eventId: UUID;
-  type: string;
-  entityType: string;
-  entityId: UUID;
-  audience: string[];
-  payload: Record<string, unknown>;
-  createdAt: string;
-  attempts?: number;
-}
+export type { OutboxEvent };
 
 export interface DeliveryResult {
   seq: number;

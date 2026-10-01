@@ -6,6 +6,7 @@ version: "1.0"
 primary_model:
   provider: "gemini"
   model_id: "gemini-2.0-flash"
+  endpoint_base: "https://generativelanguage.googleapis.com/v1beta"
   description: "Ultra-fast, sub-cent multimodal vision model for document OCR and table extraction"
   temperature: 0.0
   max_output_tokens: 4096
@@ -14,6 +15,7 @@ primary_model:
 escalation_model:
   provider: "deepseek"
   model_id: "deepseek-chat"
+  endpoint: "https://api.deepseek.com/chat/completions"
   description: "Ultra-economical high-reasoning model for ambiguous handwriting resolution and JSON repair"
   temperature: 0.0
   max_output_tokens: 4096
@@ -29,3 +31,10 @@ cost_limits:
   max_tokens_per_submission: 12000
   monthly_spend_alert_usd: 25.0
   monthly_spend_hard_cap_usd: 50.0
+  model_pricing:
+    "gemini-2.0-flash":
+      promptTokenUsd: 0.00000015
+      candidateTokenUsd: 0.00000060
+    "deepseek-chat":
+      promptTokenUsd: 0.00000014
+      candidateTokenUsd: 0.00000028

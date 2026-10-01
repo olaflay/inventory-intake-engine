@@ -32,3 +32,13 @@
   * Scope changes (attempting to add web admin UI, vector databases, microservices).
   * Committing the legacy workbook import into canonical tables.
   * Cutover from shadow pilot to production.
+
+---
+
+## 4. Mandatory Planning Before Change (RULE-PLAN-01)
+- **A plan must be written before any change is made.**
+- Prior to modifying or creating any code, tests, configuration, or database schemas:
+  * Research the requirements and formulate a comprehensive implementation plan.
+  * Define scope, affected components, invariant impact, proposed diffs, and verification steps.
+  * Obtain user approval on the plan before executing code changes.
+  * See [.agents/rules/06-plan-before-change.md](file:///c:/Users/ADMIN/Documents/inventory%20assistant/.agents/rules/06-plan-before-change.md) for complete specifications.

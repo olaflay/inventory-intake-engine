@@ -61,7 +61,9 @@ test("matchLine handles exact match and flags description conflicts", () => {
     candidateMinScore: 0.7,
     maxCandidates: 5,
     descriptionSimilarityMin: 0.6,
-    confusionPairs: [{ a: "O", b: "0", cost: 0.3 }]
+    confusionPairs: [{ a: "O", b: "0", cost: 0.3 }],
+    distinguishingTokens: [["HP", "DELL", "LG"]],
+    nullSerialTokens: ["NA", "N/A", "NIL", "NONE", "NSN"]
   };
 
   // Exact match

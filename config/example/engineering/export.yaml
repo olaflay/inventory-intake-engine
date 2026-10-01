@@ -1,0 +1,60 @@
+# Export Template Profile (FR-EXP-01, PRD 20.3)
+# Controls how the company's controlled form is projected from the database.
+# Non-developer editable. A renamed sheet or column must be corrected here.
+version: "1.0"
+
+# '{date}' is mandatory: exports are always new dated files and never overwrite.
+filename_pattern: "{org}_INVENTORY_{date}.xlsx"
+
+serial_separator: ", "
+
+sheets:
+  - sheet_name: "SURVEY EQUIPMENT"
+    category_code: "SURVEY"
+    first_data_row: 2
+    totals_column: "B"
+    totals_label_column: "H"
+    totals_label: "Total"
+    columns:
+      - { key: "internal_ref", column: "A" }
+      - { key: "description", column: "C" }
+      - { key: "status", column: "D" }
+      - { key: "location_mark", column: "E" }
+      - { key: "location_remark", column: "F" }
+      - { key: "remarks", column: "G" }
+
+  - sheet_name: "IT EQUIPMENT"
+    category_code: "IT"
+    first_data_row: 2
+    totals_column: "B"
+    totals_label_column: "H"
+    totals_label: "Total"
+    columns:
+      - { key: "internal_ref", column: "A" }
+      - { key: "description", column: "C" }
+      - { key: "status", column: "D" }
+      - { key: "location_mark", column: "E" }
+      - { key: "location_remark", column: "F" }
+      - { key: "remarks", column: "G" }
+
+summary:
+  sheet_name: "SUMMARY"
+  first_data_row: 2
+  label_column: "A"
+  total_column: "B"
+  totals_label: "Grand Total"
+
+# Location rendering: which column gets the mark, which gets the remark.
+# A rule naming 'location_name' overrides a rule naming 'location_type'.
+location_export_rules:
+  - location_type: "vessel"
+    mark_column: "E"
+    remark_column: "F"
+    mark_value: "1"
+    remark_template: "{location}"
+
+  - location_type: "yard"
+    mark_column: "E"
+    remark_column: "F"
+    mark_value: "1"
+    remark_template: "{location}"
