@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { OpsWorkbookLoader, OpsWorkbookSheets } from "../config/opsWorkbookLoader.js";
 import type { ExportTemplateSheetConfig } from "../config/engineeringConfigLoader.js";
 import { ExcelFormExporter, type ExportConfig, type SheetExportData } from "../excel/exporter.js";
+import { ShadowComparator, type ShadowPilotData } from "../services/shadowComparator.js";
 
 export interface CliResult {
   code: number;
@@ -31,8 +32,10 @@ export async function runCli(args: string[], env: Record<string, string> = proce
       "  submit <files...>          Submit document files for inventory intake",
       "  inspect <proposalId>       Inspect a proposal and its validation tier",
       "  approve <proposalId>       Submit approval for a proposal version",
-      "  export [--org <name>]      Generate dated Excel projection summary (LD-3)"
+      "  export [--org <name>]      Generate dated Excel projection summary (LD-3)",
+      "  shadow-compare <file>      Evaluate 2-week shadow pilot metrics scorecard (LD-15)"
     ].join("\n");
+
     return { code: 0, stdout: helpText, stderr: "" };
   }
 
@@ -221,8 +224,28 @@ export async function runCli(args: string[], env: Record<string, string> = proce
         }
       }
 
+      case "shadow-compare": {
+        const filePath = args[1];
+        if (!filePath) {
+          return { code: 1, stdout: "", stderr: "Error: Missing pilot data JSON file path" };
+        }
+        const fullPath = resolve(process.cwd(), filePath);
+        const rawContent = await readFile(fullPath, "utf-8");
+        const parsed = JSON.parse(rawContent) as ShadowPilotData;
+
+        const comparator = new ShadowComparator();
+        const scorecard = comparator.evaluatePilot(parsed);
+        return {
+          code: scorecard.allCriteriaMet ? 0 : 1,
+          stdout: `Shadow Pilot Scorecard: Agreement=${scorecard.agreementRatePct}%, BotCoverage=${scorecard.botCoveragePct}%, ReadyForCutover=${scorecard.readyForCutover ? "YES" : "NO"}`,
+          stderr: scorecard.allCriteriaMet ? "" : "Pilot exit criteria incomplete",
+          data: scorecard
+        };
+      }
+
       default:
         return { code: 1, stdout: "", stderr: `Unknown command: ${command}` };
+
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

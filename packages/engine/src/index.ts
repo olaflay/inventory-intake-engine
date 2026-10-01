@@ -20,3 +20,4 @@ export * from "./services/dailyDigestService.js";
 export * from "./services/jobScheduler.js";
 export * from "./queue/deadLetterQueue.js";
 export * from "./config/configManager.js";
+export * from "./services/shadowComparator.js";
