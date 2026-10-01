@@ -151,6 +151,15 @@ export class TelegramAdapterServer {
     return this.downloader;
   }
 
+  public getHttpServer(): http.Server {
+    return this.server;
+  }
+
+  public getPort(): number {
+    const addr = this.server.address();
+    return typeof addr === "object" && addr ? addr.port : this.port;
+  }
+
   public listen(): Promise<void> {
     return new Promise(resolve => {
       this.server.listen(this.port, () => resolve());
@@ -163,3 +172,4 @@ export class TelegramAdapterServer {
     });
   }
 }
+
