@@ -18,6 +18,7 @@
     "test:company-b": "node --test tests/portability/**/*.test.js",
     "test:drills": "node --test tests/drills/**/*.test.js",
     "test:e2e": "node --test tests/e2e/**/*.test.js",
+    "start": "node scripts/start_server.mjs",
     "lint": "echo \"Lint passed\""
   },
   "devDependencies": {

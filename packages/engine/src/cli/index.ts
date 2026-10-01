@@ -197,7 +197,8 @@ export async function runCli(args: string[], env: Record<string, string> = proce
           const dataPath = resolve(process.cwd(), args[dataIdx + 1]);
           const rawData = await readFile(dataPath, "utf-8");
           try {
-            sheets = JSON.parse(rawData) as SheetExportData[];
+            const parsedData = JSON.parse(rawData);
+            sheets = Array.isArray(parsedData) ? parsedData : (parsedData.sheets ?? []);
           } catch {
             return { code: 1, stdout: "", stderr: `Error: Export data at ${dataPath} is not valid JSON` };
           }
